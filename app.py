@@ -2,51 +2,34 @@ import streamlit as st
 import time
 from agents.controller_agent import run_agentic_pipeline
 
-# Page configuration
-st.set_page_config(
-    page_title="Agentic AI News Synthesizer",
-    layout="wide"
+st.set_page_config(page_title="NewsSynth Pro", layout="wide")
+
+# Sidebar for Discovery (Google News Style)
+st.sidebar.title("Personalize Feed")
+selected_genres = st.sidebar.multiselect(
+    "Choose Interests:",
+    ["Technology", "Business", "Sports", "Politics", "Science"],
+    default=["Technology"]
 )
 
-# Title
-st.title("📰 Agentic AI News Synthesizer")
-st.subheader("Powered by Groq + LLaMA 3.1")
+st.title("📰 NewsSynth Pro: Truth-Seeking AI")
 
-st.markdown(
-    """
-    This application fetches live news and generates concise summaries using
-    an **Agentic AI system** with autonomous agents.
-    """
-)
+# Standard Search Bar
+search_query = st.text_input("Search for specific news:", placeholder="e.g., SpaceX Launch")
 
-# Input box
-topic = st.text_input(
-    "Enter a news topic:",
-    placeholder="e.g., Artificial Intelligence, Agriculture, Sports"
-)
+if st.button("🔍 Synthesize News") or (not search_query and selected_genres):
+    # Use search query if typed, otherwise use first selected genre
+    target_topic = search_query if search_query.strip() else selected_genres[0]
+    
+    with st.spinner(f"Analyzing {target_topic}..."):
+        start_time = time.time()
+        results = run_agentic_pipeline(target_topic)
+        end_time = time.time()
 
-# Button
-if st.button("🔍 Generate News Summary"):
-    if not topic.strip():
-        st.warning("Please enter a valid topic.")
-    else:
-        with st.spinner("Fetching news and generating summaries..."):
-            start_time = time.time()
+        st.success(f"Analysis complete in {end_time - start_time:.2f}s")
 
-            results = run_agentic_pipeline(topic)
-
-            end_time = time.time()
-
-        st.success("Done!")
-
-        st.info(f"⏱️ Total Execution Time: {end_time - start_time:.2f} seconds")
-
-        # Display results
         for idx, article in enumerate(results, start=1):
-            st.markdown(f"### {idx}. 📰 {article['title']}")
-            st.write(article["summary"])
-            st.divider()
-
-# Footer
-st.markdown("---")
-st.caption("Minor Project | Agentic AI News Synthesizer")
+            with st.container():
+                st.markdown(f"### {idx}. {article['title']}")
+                st.write(article["summary"])
+                st.divider()
